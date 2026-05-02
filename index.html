@@ -157,6 +157,7 @@
       <button class="tab-btn active" onclick="showTab('predict',this)">⚡ Nova previsão</button>
       <button class="tab-btn" onclick="showTab('results',this)">📊 Resultados (<span id="results-count">0</span>)</button>
       <button class="tab-btn" onclick="showTab('teams',this)">📋 Times</button>
+      <button class="tab-btn" onclick="showTab('performance',this)">📈 Performance</button>
       <button class="tab-btn" onclick="showTab('admin',this)" style="margin-left:auto;border-color:#C9A227;color:#C9A227">⚙️ Admin</button>
     </div>
 
@@ -218,6 +219,73 @@
       </div>
     </div>
 
+    <!-- PERFORMANCE TAB -->
+    <div id="tab-performance" style="display:none">
+
+      <!-- Stats cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px" id="perf-stats">
+        <div class="card" style="text-align:center">
+          <div style="font-size:0.65rem;color:#445;font-family:monospace;margin-bottom:4px">JOGOS</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#fff" id="stat-total">—</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:0.65rem;color:#445;font-family:monospace;margin-bottom:4px">REALIZADOS</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#fff" id="stat-played">—</div>
+        </div>
+        <div class="card" style="text-align:center;background:#0d1a14;border-color:#1a3024">
+          <div style="font-size:0.65rem;color:#3ddc84;font-family:monospace;margin-bottom:4px">% RESULTADO</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#3ddc84" id="stat-result">—</div>
+        </div>
+        <div class="card" style="text-align:center;background:#0d1420;border-color:#1a2040">
+          <div style="font-size:0.65rem;color:#4A90D9;font-family:monospace;margin-bottom:4px">% PLACAR EXATO</div>
+          <div style="font-size:1.6rem;font-weight:800;color:#4A90D9" id="stat-score">—</div>
+        </div>
+      </div>
+
+      <!-- Cadastrar jogo -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">➕ Cadastrar jogo</div>
+        <div class="grid3" style="margin-bottom:10px">
+          <div class="field"><label class="label">Competição</label>
+            <select id="m-comp">
+              <option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option>
+            </select>
+          </div>
+          <div class="field"><label class="label">Data</label><input id="m-date" placeholder="ex: 07/05" /></div>
+          <div class="field"><label class="label">Horário</label><input id="m-time" placeholder="ex: 21:30" /></div>
+        </div>
+        <div class="grid3vs" style="margin-bottom:10px">
+          <div class="field"><label class="label">🏠 Casa</label>
+            <select id="m-home"><option value="">Selecione...</option></select>
+          </div>
+          <div class="vs-label">vs</div>
+          <div class="field"><label class="label">✈️ Visitante</label>
+            <select id="m-away"><option value="">Selecione...</option></select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-bottom:10px">
+          <div class="field"><label class="label">Odd Casa</label><input id="m-oh" placeholder="ex: 2.10" /></div>
+          <div class="field"><label class="label">Odd Empate</label><input id="m-od" placeholder="ex: 3.20" /></div>
+          <div class="field"><label class="label">Odd Fora</label><input id="m-oa" placeholder="ex: 3.80" /></div>
+        </div>
+        <button class="btn-green" onclick="createMatch()">📅 Cadastrar jogo</button>
+        <div id="match-create-msg" style="font-size:0.8rem;margin-top:8px;display:none"></div>
+      </div>
+
+      <!-- Lista de jogos -->
+      <div class="card">
+        <div class="card-title">📋 Jogos acompanhados</div>
+        <div class="search-row" style="margin-bottom:12px">
+          <select id="m-filter-comp" onchange="loadMatches()" style="width:auto">
+            <option value="">Todas as competições</option>
+            <option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option>
+          </select>
+          <button onclick="loadMatches()" style="background:#111820;border:1px solid #1e2530;border-radius:8px;color:#3ddc84;padding:8px 14px;font-size:0.8rem;cursor:pointer;font-family:Syne,sans-serif">↻ Atualizar</button>
+        </div>
+        <div id="matches-list"><div style="color:#445;font-size:0.82rem">Carregando...</div></div>
+      </div>
+    </div>
+
     <!-- ADMIN TAB -->
     <div id="tab-admin" style="display:none">
       <!-- senha admin -->
@@ -249,14 +317,19 @@
             <div class="field"><label class="label">Jogos</label><input id="a-games" placeholder="ex: 38" type="number" /></div>
           </div>
           <div class="grid3" style="margin-bottom:10px">
-            <div class="field"><label class="label">GF médio por jogo</label><input id="a-gf" placeholder="ex: 1.45" /></div>
-            <div class="field"><label class="label">GA médio por jogo</label><input id="a-ga" placeholder="ex: 0.92" /></div>
+            <div class="field"><label class="label">GF médio por jogo</label><input id="a-gf" placeholder="ex: 1.19" /></div>
+            <div class="field"><label class="label">GA médio por jogo</label><input id="a-ga" placeholder="ex: 1.07" /></div>
+            <div class="field"><label class="label">xG For médio <span style="color:#445">(opcional)</span></label><input id="a-xgf" placeholder="ex: 1.25" /></div>
+          </div>
+          <div class="grid3" style="margin-bottom:10px">
+            <div class="field"><label class="label">xG Against médio <span style="color:#445">(opcional)</span></label><input id="a-xga" placeholder="ex: 1.02" /></div>
+            <div class="field"><label class="label">Dias atrás <span style="color:#445">(centro da amostra)</span></label><input id="a-days" placeholder="ex: 180 (6 meses)" /></div>
             <div class="field" style="justify-content:flex-end;padding-top:18px">
               <button class="btn-green" onclick="adminAddTeam()">💾 Salvar time</button>
             </div>
           </div>
           <div style="font-size:0.72rem;color:#445;font-family:'DM Mono',monospace">
-            ATK = GF_médio ÷ 1.20 &nbsp;·&nbsp; DEF = GA_médio ÷ 1.20
+            ATK = blend(GF, xG) ÷ 1.20 &nbsp;·&nbsp; DEF = blend(GA, xGA) ÷ 1.20 &nbsp;·&nbsp; blend = 50% gols + 50% xG
           </div>
           <div id="admin-add-msg" style="margin-top:8px;font-size:0.8rem;display:none"></div>
         </div>
@@ -317,6 +390,7 @@ async function loadTeams() {
     document.getElementById("api-status").className = "api-status api-ok";
     filterTeams();
     renderTeams();
+    populateMatchSelects();
   } catch {
     document.getElementById("api-status").textContent = "⚠ API offline";
     document.getElementById("api-status").className = "api-status api-err";
@@ -348,6 +422,7 @@ function renderTeams() {
       <span style="color:${COMP_COLORS[t.competition]||'#666'};font-size:0.7rem">${t.competition}</span>
       <span style="font-family:'DM Mono',monospace;color:#3ddc84">${t.attack_param?.toFixed(3)}</span>
       <span style="font-family:'DM Mono',monospace;color:#ff9966">${t.defense_param?.toFixed(3)}</span>
+      <span style="font-size:0.62rem;color:${t.method==="xg_blend"?"#C9A227":"#334"}">${t.method==="xg_blend"?"xG":""}</span>
     </div>`).join("");
   document.getElementById("teams-count").textContent = filtered.length + " times · μ=1.20 · ρ=−0.13";
 }
@@ -535,6 +610,8 @@ function renderResults() {
             <span class="comp-badge" style="border-color:${cc};color:${cc}">${p.competition}</span>
             ${p.date ? `<span style="font-size:0.7rem;color:#445;font-family:'DM Mono',monospace">${p.date} · ${p.time}</span>` : ""}
             ${p.has_value ? `<span class="value-badge">⚡ VALOR</span>` : ""}
+            ${p.method === "xg_blend" ? `<span style="border:1px solid #C9A227;color:#C9A227;border-radius:4px;padding:2px 7px;font-size:0.62rem;font-family:monospace">xG blend</span>` : ""}
+            ${p.decay_applied ? `<span style="border:1px solid #4A90D9;color:#4A90D9;border-radius:4px;padding:2px 7px;font-size:0.62rem;font-family:monospace">decay 12m</span>` : ""}
           </div>
           <button class="close-btn" onclick="removePred(${i})">✕</button>
         </div>
@@ -568,9 +645,203 @@ function removePred(i) { predictions.splice(i, 1); document.getElementById("resu
 
 // ── Tabs ───────────────────────────────────────────────────────────────
 function showTab(name, btn) {
-  ["predict","results","teams","admin"].forEach(t => document.getElementById("tab-"+t).style.display = t === name ? "block" : "none");
+  if (name === "performance") { loadMatches(); }
+  ["predict","results","teams","performance","admin"].forEach(t => document.getElementById("tab-"+t).style.display = t === name ? "block" : "none");
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
+}
+
+// ── Performance ───────────────────────────────────────────────────────────
+
+let allMatches = [];
+
+async function loadMatches() {
+  const comp = document.getElementById("m-filter-comp")?.value || "";
+  try {
+    const url = API + "/matches" + (comp ? "?competition=" + encodeURIComponent(comp) : "");
+    const r = await fetch(url);
+    const data = await r.json();
+    allMatches = data.matches || [];
+    renderMatches();
+    loadMatchStats();
+    populateMatchSelects();
+  } catch(e) {
+    document.getElementById("matches-list").innerHTML = '<div style="color:#ff6b6b;font-size:0.82rem">Erro ao carregar jogos.</div>';
+  }
+}
+
+async function loadMatchStats() {
+  try {
+    const r = await fetch(API + "/matches/stats");
+    const s = await r.json();
+    document.getElementById("stat-total").textContent = s.total_matches;
+    document.getElementById("stat-played").textContent = s.played;
+    document.getElementById("stat-result").textContent = s.played ? s.pct_result + "%" : "—";
+    document.getElementById("stat-score").textContent = s.played ? s.pct_score + "%" : "—";
+  } catch {}
+}
+
+function populateMatchSelects() {
+  const comp = document.getElementById("m-comp")?.value || "Libertadores";
+  const teams = allTeams.filter(t => t.competition === comp);
+  const names = [...new Set(teams.map(t => t.name))].sort();
+  ["m-home","m-away"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Selecione...</option>';
+    names.forEach(n => { const o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o); });
+    if (cur) sel.value = cur;
+  });
+}
+
+document.addEventListener("change", e => {
+  if (e.target.id === "m-comp") populateMatchSelects();
+});
+
+async function createMatch() {
+  const home = document.getElementById("m-home").value;
+  const away = document.getElementById("m-away").value;
+  const comp = document.getElementById("m-comp").value;
+  const date = document.getElementById("m-date").value;
+  const time = document.getElementById("m-time").value;
+  const msg = document.getElementById("match-create-msg");
+
+  if (!home || !away || !date) { showMsg(msg, "Preencha casa, visitante e data.", false); return; }
+  if (home === away) { showMsg(msg, "Times não podem ser iguais.", false); return; }
+
+  try {
+    const r = await fetch(API + "/matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        home_team: home, away_team: away, competition: comp, date, time,
+        odds_home: parseFloat(document.getElementById("m-oh").value) || null,
+        odds_draw: parseFloat(document.getElementById("m-od").value) || null,
+        odds_away: parseFloat(document.getElementById("m-oa").value) || null,
+      }),
+    });
+    const data = await r.json();
+    showMsg(msg, "✅ " + data.message, true);
+    await loadMatches();
+    document.getElementById("m-home").value = "";
+    document.getElementById("m-away").value = "";
+    document.getElementById("m-date").value = "";
+    document.getElementById("m-time").value = "";
+  } catch { showMsg(msg, "❌ Erro ao cadastrar.", false); }
+}
+
+async function setResult(matchId, auto) {
+  if (auto) {
+    const r = await fetch(API + "/matches/fetch-result/" + matchId, {
+      headers: { "x-admin-secret": adminSecret || "dcpredict-admin-2025" }
+    });
+    const data = await r.json();
+    if (data.found) {
+      await saveResult(matchId, data.home_goals, data.away_goals);
+      return;
+    } else {
+      alert("Não encontrado automaticamente: " + (data.message || ""));
+    }
+  }
+  const placar = prompt("Digite o placar real (ex: 2-1):");
+  if (!placar) return;
+  const parts = placar.split("-");
+  if (parts.length !== 2) { alert("Formato inválido. Use ex: 2-1"); return; }
+  await saveResult(matchId, parseInt(parts[0]), parseInt(parts[1]));
+}
+
+async function saveResult(matchId, homeGoals, awayGoals) {
+  try {
+    const r = await fetch(API + "/matches/" + matchId + "/result", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret || "dcpredict-admin-2025" },
+      body: JSON.stringify({ home_goals: homeGoals, away_goals: awayGoals }),
+    });
+    await r.json();
+    await loadMatches();
+  } catch { alert("Erro ao salvar resultado."); }
+}
+
+async function deleteMatch(matchId) {
+  if (!confirm("Remover este jogo?")) return;
+  await fetch(API + "/matches/" + matchId, {
+    method: "DELETE",
+    headers: { "x-admin-secret": adminSecret || "dcpredict-admin-2025" }
+  });
+  await loadMatches();
+}
+
+function renderMatches() {
+  const list = document.getElementById("matches-list");
+  if (!allMatches.length) {
+    list.innerHTML = '<div style="color:#445;font-size:0.82rem;padding:8px 0">Nenhum jogo cadastrado ainda.</div>';
+    return;
+  }
+
+  list.innerHTML = allMatches.map(m => {
+    const p = m.prediction;
+    const r = m.result;
+    const cc = COMP_COLORS[m.competition] || "#888";
+
+    // Status
+    let statusBadge = '<span style="font-size:0.65rem;color:#445;font-family:monospace">Aguardando</span>';
+    if (r) {
+      const actual = r.home_goals + "-" + r.away_goals;
+      const predicted = p?.most_likely_score || "—";
+      const hitScore = actual === predicted;
+      const hitResult = m.hit_result;
+      statusBadge = \`
+        <span style="font-size:0.72rem;font-weight:700;font-family:monospace;color:#c8d4e0">\${actual}</span>
+        <span style="font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:monospace;\${hitScore?"background:#0d3320;color:#3ddc84":"background:#1e0d0d;color:#ff6b6b"}">
+          Placar \${hitScore?"✓":"✗"}
+        </span>
+        <span style="font-size:0.65rem;padding:2px 6px;border-radius:4px;font-family:monospace;\${hitResult?"background:#0d3320;color:#3ddc84":"background:#1e0d0d;color:#ff6b6b"}">
+          Resultado \${hitResult?"✓":"✗"}
+        </span>\`;
+    }
+
+    return \`<div style="border:1px solid #1a1f28;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#080c12">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="border:1px solid \${cc};color:\${cc};border-radius:4px;padding:2px 7px;font-size:0.65rem;font-family:monospace">\${m.competition}</span>
+          <span style="font-size:0.7rem;color:#445;font-family:monospace">\${m.date} \${m.time}</span>
+          \${statusBadge}
+        </div>
+        <div style="display:flex;gap:6px">
+          \${!r ? \`<button onclick="setResult(\${m.id},true)" style="background:#0d1a14;border:1px solid #3ddc84;border-radius:6px;color:#3ddc84;padding:4px 10px;font-size:0.7rem;cursor:pointer">🔍 Auto</button>
+          <button onclick="setResult(\${m.id},false)" style="background:#111820;border:1px solid #1e2530;border-radius:6px;color:#8a9bb0;padding:4px 10px;font-size:0.7rem;cursor:pointer">✏️ Manual</button>\` : 
+          \`<button onclick="setResult(\${m.id},false)" style="background:#111820;border:1px solid #1e2530;border-radius:6px;color:#8a9bb0;padding:4px 10px;font-size:0.7rem;cursor:pointer">✏️ Editar</button>\`}
+          <button onclick="deleteMatch(\${m.id})" style="background:none;border:1px solid #3a1a1a;border-radius:6px;color:#ff6b6b;padding:4px 8px;font-size:0.7rem;cursor:pointer">✕</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div style="font-size:0.9rem;font-weight:700;color:#c8d4e0">\${m.home_team}</div>
+          \${p ? \`<div style="font-size:0.65rem;color:#445;font-family:monospace">λ \${p.lambda_home}</div>\` : ""}
+        </div>
+        <div style="text-align:center">
+          \${p ? \`<div style="font-size:1.2rem;font-weight:800;color:#fff">\${p.most_likely_score}</div>
+          <div style="font-size:0.6rem;color:#445;font-family:monospace">previsto · \${p.score_prob}%</div>\` : 
+          \`<div style="font-size:0.75rem;color:#334">sem parâmetros</div>\`}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:0.9rem;font-weight:700;color:#c8d4e0">\${m.away_team}</div>
+          \${p ? \`<div style="font-size:0.65rem;color:#445;font-family:monospace">λ \${p.lambda_away}</div>\` : ""}
+        </div>
+      </div>
+      \${p ? \`<div style="display:flex;height:20px;border-radius:4px;overflow:hidden;gap:2px;margin-top:8px">
+        <div style="width:\${p.prob_home}%;background:#1a3a5c;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#6aadff;min-width:28px">\${p.prob_home}%</div>
+        <div style="width:\${p.prob_draw}%;background:#2a2a1a;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#c8b060;min-width:28px">\${p.prob_draw}%</div>
+        <div style="width:\${p.prob_away}%;background:#3a1a1a;display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:#ff7070;min-width:28px">\${p.prob_away}%</div>
+      </div>\` : ""}
+    </div>\`;
+  }).join("");
+}
+
+function showMsg(el, text, ok) {
+  el.textContent = text; el.style.color = ok ? "#3ddc84" : "#ff6b6b"; el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 4000);
 }
 
 // ── Admin ──────────────────────────────────────────────────────────────
@@ -604,6 +875,14 @@ async function adminAddTeam() {
   const gf = parseFloat(gfRaw);
   const ga = parseFloat(gaRaw);
 
+  // xG e decay (opcionais)
+  const xgfRaw = (document.getElementById("a-xgf")?.value || "").trim().replace(",",".");
+  const xgaRaw = (document.getElementById("a-xga")?.value || "").trim().replace(",",".");
+  const daysRaw = (document.getElementById("a-days")?.value || "").trim();
+  const xg_for = xgfRaw ? parseFloat(xgfRaw) : null;
+  const xg_against = xgaRaw ? parseFloat(xgaRaw) : null;
+  const days_ago = daysRaw ? parseFloat(daysRaw) : null;
+
   if (!name || isNaN(gf) || isNaN(ga) || gf <= 0 || ga <= 0) {
     showAdminMsg(msg, "Preencha GF e GA corretamente (ex: 1.19)", false);
     return;
@@ -611,14 +890,14 @@ async function adminAddTeam() {
 
   showAdminMsg(msg, "Enviando...", true);
   try {
-    const payload = { name, competition: comp, games, goals_for: gf, goals_against: ga };
+    const payload = { name, competition: comp, games, goals_for: gf, goals_against: ga, xg_for, xg_against, days_ago };
     const r = await fetch(API + "/admin/teams", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
       body: JSON.stringify(payload),
     });
     const data = await r.json();
-    showAdminMsg(msg, "✅ " + data.message + " ATK=" + data.team.attack_param + " DEF=" + data.team.defense_param, true);
+    const met = data.team.method === "xg_blend" ? " [xG blend]" : " [gols]"; showAdminMsg(msg, "✅ " + data.message + " ATK=" + data.team.attack_param + " DEF=" + data.team.defense_param + met, true);
     await loadTeams();
     renderAdminTeams();
     nameEl.value = "";
@@ -661,6 +940,7 @@ function renderAdminTeams() {
       <span style="font-family:'DM Mono',monospace;color:#aaa">${t.goals_against?.toFixed(2)}</span>
       <span style="font-family:'DM Mono',monospace;color:#3ddc84">${t.attack_param?.toFixed(3)}</span>
       <span style="font-family:'DM Mono',monospace;color:#ff9966">${t.defense_param?.toFixed(3)}</span>
+      <span style="font-size:0.62rem;color:${t.method==="xg_blend"?"#C9A227":"#334"}">${t.method==="xg_blend"?"xG":""}</span>
       <button onclick="adminDeleteTeam('${t.name.replace(/'/g,"\\'")}','${t.competition}')"
         style="background:none;border:1px solid #3a1a1a;border-radius:4px;color:#ff6b6b;padding:3px 7px;font-size:0.68rem;cursor:pointer">✕</button>
     </div>`).join("");
