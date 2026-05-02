@@ -465,30 +465,43 @@ function unlockAdmin() {
 }
 
 async function adminAddTeam() {
-  const name = document.getElementById("a-name").value.trim();
-  const comp = document.getElementById("a-comp").value;
-  const games = parseInt(document.getElementById("a-games").value) || 30;
-  const gf = parseFloat(document.getElementById("a-gf").value);
-  const ga = parseFloat(document.getElementById("a-ga").value);
+  const nameEl = document.getElementById("a-name");
+  const compEl = document.getElementById("a-comp");
+  const gamesEl = document.getElementById("a-games");
+  const gfEl = document.getElementById("a-gf");
+  const gaEl = document.getElementById("a-ga");
   const msg = document.getElementById("admin-add-msg");
 
-  if (!name || !gf || !ga) { showAdminMsg(msg, "Preencha todos os campos.", false); return; }
+  const name = nameEl.value.trim();
+  const comp = compEl.value;
+  const games = parseInt(gamesEl.value) || 30;
+  const gfRaw = gfEl.value.trim().replace(",", ".");
+  const gaRaw = gaEl.value.trim().replace(",", ".");
+  const gf = parseFloat(gfRaw);
+  const ga = parseFloat(gaRaw);
 
+  if (!name || isNaN(gf) || isNaN(ga) || gf <= 0 || ga <= 0) {
+    showAdminMsg(msg, "Preencha GF e GA corretamente (ex: 1.19)", false);
+    return;
+  }
+
+  showAdminMsg(msg, "Enviando...", true);
   try {
+    const payload = { name, competition: comp, games, goals_for: gf, goals_against: ga };
     const r = await fetch(API + "/admin/teams", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
-      body: JSON.stringify({ name, competition: comp, games, goals_for: gf, goals_against: ga }),
+      body: JSON.stringify(payload),
     });
     const data = await r.json();
-    showAdminMsg(msg, `✅ ${data.message} ATK=${data.team.attack_param} · DEF=${data.team.defense_param}`, true);
+    showAdminMsg(msg, "✅ " + data.message + " ATK=" + data.team.attack_param + " DEF=" + data.team.defense_param, true);
     await loadTeams();
     renderAdminTeams();
-    document.getElementById("a-name").value = "";
-    document.getElementById("a-gf").value = "";
-    document.getElementById("a-ga").value = "";
-  } catch {
-    showAdminMsg(msg, "❌ Erro ao salvar.", false);
+    nameEl.value = "";
+    gfEl.value = "";
+    gaEl.value = "";
+  } catch(e) {
+    showAdminMsg(msg, "❌ Erro: " + e.message, false);
   }
 }
 
