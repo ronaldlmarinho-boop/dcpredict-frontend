@@ -148,6 +148,7 @@
       <button class="tab-btn active" onclick="showTab('predict',this)">⚡ Nova previsão</button>
       <button class="tab-btn" onclick="showTab('results',this)">📊 Resultados (<span id="results-count">0</span>)</button>
       <button class="tab-btn" onclick="showTab('teams',this)">📋 Times</button>
+      <button class="tab-btn" onclick="showTab('admin',this)" style="margin-left:auto;border-color:#C9A227;color:#C9A227">⚙️ Admin</button>
     </div>
 
     <!-- PREDICT TAB -->
@@ -205,6 +206,67 @@
         <div class="teams-header"><span>Time</span><span>Competição</span><span>ATK</span><span>DEF</span></div>
         <div id="teams-list"></div>
         <div style="font-size:0.62rem;color:#334;margin-top:8px;font-family:'DM Mono',monospace" id="teams-count"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN TAB -->
+    <div id="tab-admin" style="display:none">
+      <!-- senha admin -->
+      <div id="admin-lock" class="card" style="margin-bottom:14px">
+        <div class="card-title">🔒 Acesso Admin</div>
+        <div class="grid3" style="margin-bottom:10px">
+          <div class="field" style="grid-column:span 2">
+            <label class="label">Senha admin</label>
+            <input id="admin-pass" type="password" placeholder="dcpredict-admin-2025" />
+          </div>
+          <div class="field" style="justify-content:flex-end;padding-top:18px">
+            <button class="btn-green" onclick="unlockAdmin()">Entrar</button>
+          </div>
+        </div>
+        <div id="admin-err" style="color:#ff6b6b;font-size:0.78rem;display:none">Senha incorreta.</div>
+      </div>
+
+      <div id="admin-panel" style="display:none">
+        <!-- Adicionar time -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title">➕ Adicionar / Atualizar time</div>
+          <div class="grid3" style="margin-bottom:10px">
+            <div class="field"><label class="label">Nome do time</label><input id="a-name" placeholder="ex: Flamengo" /></div>
+            <div class="field"><label class="label">Competição</label>
+              <select id="a-comp">
+                <option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option>
+              </select>
+            </div>
+            <div class="field"><label class="label">Jogos</label><input id="a-games" placeholder="ex: 38" type="number" /></div>
+          </div>
+          <div class="grid3" style="margin-bottom:10px">
+            <div class="field"><label class="label">GF médio por jogo</label><input id="a-gf" placeholder="ex: 1.45" /></div>
+            <div class="field"><label class="label">GA médio por jogo</label><input id="a-ga" placeholder="ex: 0.92" /></div>
+            <div class="field" style="justify-content:flex-end;padding-top:18px">
+              <button class="btn-green" onclick="adminAddTeam()">💾 Salvar time</button>
+            </div>
+          </div>
+          <div style="font-size:0.72rem;color:#445;font-family:'DM Mono',monospace">
+            ATK = GF_médio ÷ 1.20 &nbsp;·&nbsp; DEF = GA_médio ÷ 1.20
+          </div>
+          <div id="admin-add-msg" style="margin-top:8px;font-size:0.8rem;display:none"></div>
+        </div>
+
+        <!-- Lista editável -->
+        <div class="card">
+          <div class="card-title">✏️ Editar times existentes</div>
+          <div class="search-row" style="margin-bottom:12px">
+            <input id="admin-search" placeholder="Buscar time..." oninput="renderAdminTeams()" />
+            <select id="admin-comp-filter" onchange="renderAdminTeams()" style="width:auto">
+              <option value="">Todos</option>
+              <option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr auto;gap:6px;padding:5px 0;font-size:0.62rem;color:#334;font-family:'DM Mono',monospace;text-transform:uppercase;border-bottom:1px solid #1a1f28;margin-bottom:4px">
+            <span>Time</span><span>Comp</span><span>GF/j</span><span>GA/j</span><span>ATK</span><span>DEF</span><span></span>
+          </div>
+          <div id="admin-teams-list"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -382,9 +444,96 @@ function removePred(i) { predictions.splice(i, 1); document.getElementById("resu
 
 // ── Tabs ───────────────────────────────────────────────────────────────
 function showTab(name, btn) {
-  ["predict","results","teams"].forEach(t => document.getElementById("tab-"+t).style.display = t === name ? "block" : "none");
+  ["predict","results","teams","admin"].forEach(t => document.getElementById("tab-"+t).style.display = t === name ? "block" : "none");
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
+}
+
+// ── Admin ──────────────────────────────────────────────────────────────
+let adminSecret = "";
+
+function unlockAdmin() {
+  const pass = document.getElementById("admin-pass").value;
+  if (pass === "dcpredict-admin-2025") {
+    adminSecret = pass;
+    document.getElementById("admin-lock").style.display = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    renderAdminTeams();
+  } else {
+    document.getElementById("admin-err").style.display = "block";
+  }
+}
+
+async function adminAddTeam() {
+  const name = document.getElementById("a-name").value.trim();
+  const comp = document.getElementById("a-comp").value;
+  const games = parseInt(document.getElementById("a-games").value) || 30;
+  const gf = parseFloat(document.getElementById("a-gf").value);
+  const ga = parseFloat(document.getElementById("a-ga").value);
+  const msg = document.getElementById("admin-add-msg");
+
+  if (!name || !gf || !ga) { showAdminMsg(msg, "Preencha todos os campos.", false); return; }
+
+  try {
+    const r = await fetch(API + "/admin/teams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": adminSecret },
+      body: JSON.stringify({ name, competition: comp, games, goals_for: gf, goals_against: ga }),
+    });
+    const data = await r.json();
+    showAdminMsg(msg, `✅ ${data.message} ATK=${data.team.attack_param} · DEF=${data.team.defense_param}`, true);
+    await loadTeams();
+    renderAdminTeams();
+    document.getElementById("a-name").value = "";
+    document.getElementById("a-gf").value = "";
+    document.getElementById("a-ga").value = "";
+  } catch {
+    showAdminMsg(msg, "❌ Erro ao salvar.", false);
+  }
+}
+
+async function adminDeleteTeam(name, comp) {
+  if (!confirm(`Remover ${name} (${comp})?`)) return;
+  try {
+    const r = await fetch(`${API}/admin/teams/${encodeURIComponent(name)}?competition=${encodeURIComponent(comp)}`, {
+      method: "DELETE",
+      headers: { "x-admin-secret": adminSecret },
+    });
+    const data = await r.json();
+    await loadTeams();
+    renderAdminTeams();
+    alert(data.message);
+  } catch {
+    alert("Erro ao remover time.");
+  }
+}
+
+function renderAdminTeams() {
+  const search = document.getElementById("admin-search").value.toLowerCase();
+  const comp = document.getElementById("admin-comp-filter").value;
+  const filtered = allTeams.filter(t =>
+    (!comp || t.competition === comp) &&
+    (!search || t.name.toLowerCase().includes(search))
+  );
+  const list = document.getElementById("admin-teams-list");
+  list.innerHTML = filtered.map(t => `
+    <div style="display:grid;grid-template-columns:2fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr auto;gap:6px;padding:7px 0;font-size:0.78rem;border-bottom:1px solid #0f1318;align-items:center">
+      <span style="color:#c8d4e0;font-weight:600">${t.name}</span>
+      <span style="color:${COMP_COLORS[t.competition]||'#666'};font-size:0.68rem">${t.competition}</span>
+      <span style="font-family:'DM Mono',monospace;color:#aaa">${t.goals_for?.toFixed(2)}</span>
+      <span style="font-family:'DM Mono',monospace;color:#aaa">${t.goals_against?.toFixed(2)}</span>
+      <span style="font-family:'DM Mono',monospace;color:#3ddc84">${t.attack_param?.toFixed(3)}</span>
+      <span style="font-family:'DM Mono',monospace;color:#ff9966">${t.defense_param?.toFixed(3)}</span>
+      <button onclick="adminDeleteTeam('${t.name.replace(/'/g,"\\'")}','${t.competition}')"
+        style="background:none;border:1px solid #3a1a1a;border-radius:4px;color:#ff6b6b;padding:3px 7px;font-size:0.68rem;cursor:pointer">✕</button>
+    </div>`).join("");
+}
+
+function showAdminMsg(el, text, ok) {
+  el.textContent = text;
+  el.style.color = ok ? "#3ddc84" : "#ff6b6b";
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 4000);
 }
 </script>
 </body>
