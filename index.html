@@ -146,7 +146,7 @@
       <div id="alock" class="card" style="margin-bottom:14px">
         <div class="card-title">🔒 Acesso Admin</div>
         <div class="g3" style="margin-bottom:10px">
-          <div class="fld" style="grid-column:span 2"><label class="lbl">Senha</label><input id="apwd" type="password" placeholder="dcpredict-admin-2025" onkeydown="if(event.key==='Enter')unlockAdmin()" /></div>
+          <div class="fld" style="grid-column:span 2"><label class="lbl">Senha</label><input id="apwd" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')unlockAdmin()" /></div>
           <div class="fld" style="justify-content:flex-end;padding-top:18px"><button class="btn-green" onclick="unlockAdmin()">Entrar</button></div>
         </div>
         <div id="aerr" style="color:#ff6b6b;font-size:0.78rem;display:none">Senha incorreta.</div>
@@ -350,7 +350,7 @@ async function createMatch(){
 async function setResult(id,auto){
   if(auto){
     try{
-      const d=await(await fetch(API+"/matches/fetch-result/"+id,{headers:{"x-admin-secret":adSec||"dcpredict-admin-2025"}})).json();
+      const d=await(await fetch(API+"/matches/fetch-result/"+id,{headers:{"x-admin-secret":adSec}})).json();
       if(d.found){await saveRes(id,d.home_goals,d.away_goals);return;}
       alert("Não encontrado automaticamente. Use manual.");
     }catch{}
@@ -362,13 +362,13 @@ async function setResult(id,auto){
 }
 
 async function saveRes(id,hg,ag){
-  await fetch(API+"/matches/"+id+"/result",{method:"PUT",headers:{"Content-Type":"application/json","x-admin-secret":adSec||"dcpredict-admin-2025"},body:JSON.stringify({home_goals:hg,away_goals:ag})});
+  await fetch(API+"/matches/"+id+"/result",{method:"PUT",headers:{"Content-Type":"application/json","x-admin-secret":adSec},body:JSON.stringify({home_goals:hg,away_goals:ag})});
   await loadMatches();
 }
 
 async function delMatch(id){
   if(!confirm("Remover este jogo?"))return;
-  await fetch(API+"/matches/"+id,{method:"DELETE",headers:{"x-admin-secret":adSec||"dcpredict-admin-2025"}});
+  await fetch(API+"/matches/"+id,{method:"DELETE",headers:{"x-admin-secret":adSec}});
   await loadMatches();
 }
 
@@ -384,10 +384,20 @@ function renderMatchList(){
   }).join("");
 }
 
-function unlockAdmin(){
+async function unlockAdmin(){
   const pw=document.getElementById("apwd").value;
-  if(pw==="dcpredict-admin-2025"){adSec=pw;document.getElementById("alock").style.display="none";document.getElementById("apanel").style.display="block";renderAdminTeams();fillMSelects();loadMatches();loadStats();}
-  else document.getElementById("aerr").style.display="block";
+  if(!pw){document.getElementById("aerr").style.display="block";return;}
+  try{
+    const r=await fetch(API+"/admin/scrape/status",{headers:{"x-admin-secret":pw}});
+    if(r.status===200){
+      adSec=pw;
+      document.getElementById("alock").style.display="none";
+      document.getElementById("apanel").style.display="block";
+      renderAdminTeams();fillMSelects();loadMatches();loadStats();
+    } else {
+      document.getElementById("aerr").style.display="block";
+    }
+  }catch{document.getElementById("aerr").style.display="block";}
 }
 
 async function adminAddTeam(){
