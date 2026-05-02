@@ -69,7 +69,7 @@
     <input id="p" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')login()" />
     <div id="lerr" style="color:#ff6b6b;font-size:0.8rem;text-align:center;display:none">Usuário ou senha incorretos.</div>
     <button class="btn-green" id="lbtn" onclick="login()">Entrar</button>
-    <div style="font-size:0.72rem;color:#445;text-align:center">Demo: <strong style="color:#3ddc84">demo</strong> / <strong style="color:#3ddc84">123</strong></div>
+
   </div>
 </div>
 
@@ -91,7 +91,7 @@
     <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
       <button class="tab-btn active" onclick="showTab('predict',this)">⚡ Nova previsão</button>
       <button class="tab-btn" onclick="showTab('results',this)">📊 Resultados (<span id="rc">0</span>)</button>
-      <button class="tab-btn" onclick="showTab('performance',this)">📈 Performance</button>
+
       <button class="tab-btn" onclick="showTab('teams',this)">📋 Times</button>
       <button class="tab-btn" onclick="showTab('admin',this)" style="margin-left:auto;border-color:#C9A227;color:#C9A227">⚙️ Admin</button>
     </div>
@@ -125,47 +125,7 @@
       <div id="rlist"><div class="card" style="color:#445;text-align:center;padding:32px">Nenhuma previsão ainda.</div></div>
     </div>
 
-    <!-- PERFORMANCE -->
-    <div id="tab-performance" style="display:none">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-        <div class="stat-card"><div class="stat-lbl">Jogos</div><div class="stat-val" id="st0" style="color:#fff">—</div></div>
-        <div class="stat-card"><div class="stat-lbl">Realizados</div><div class="stat-val" id="st1" style="color:#fff">—</div></div>
-        <div class="stat-card" style="background:#0d1a14;border-color:#1a3024"><div class="stat-lbl" style="color:#3ddc84">% Resultado</div><div class="stat-val" id="st2" style="color:#3ddc84">—</div></div>
-        <div class="stat-card" style="background:#0d1420;border-color:#1a2040"><div class="stat-lbl" style="color:#4A90D9">% Placar exato</div><div class="stat-val" id="st3" style="color:#4A90D9">—</div></div>
-      </div>
 
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-title">➕ Cadastrar jogo</div>
-        <div class="g3">
-          <div class="fld"><label class="lbl">Competição</label><select id="mc" onchange="fillMSelects()"><option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option></select></div>
-          <div class="fld"><label class="lbl">Data</label><input id="mdt" placeholder="ex: 07/05" /></div>
-          <div class="fld"><label class="lbl">Horário</label><input id="mti" placeholder="ex: 21:30" /></div>
-        </div>
-        <div class="g2vs">
-          <div class="fld"><label class="lbl">🏠 Casa</label><select id="mh"><option value="">Selecione...</option></select></div>
-          <div class="vs-lbl">vs</div>
-          <div class="fld"><label class="lbl">✈️ Visitante</label><select id="ma"><option value="">Selecione...</option></select></div>
-        </div>
-        <div class="g3">
-          <div class="fld"><label class="lbl">Odd Casa</label><input id="moh" placeholder="2.10" /></div>
-          <div class="fld"><label class="lbl">Odd Empate</label><input id="mod" placeholder="3.20" /></div>
-          <div class="fld"><label class="lbl">Odd Fora</label><input id="moa" placeholder="3.80" /></div>
-        </div>
-        <button class="btn-green" onclick="createMatch()">📅 Cadastrar jogo</button>
-        <div id="mmsg" style="font-size:0.8rem;margin-top:8px;display:none"></div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-          <div class="card-title" style="margin-bottom:0">📋 Jogos acompanhados</div>
-          <div style="display:flex;gap:8px">
-            <select id="mf" onchange="loadMatches()" style="width:auto;font-size:0.8rem"><option value="">Todas</option><option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option></select>
-            <button onclick="loadMatches()" style="background:#0d1a14;border:1px solid #3ddc84;border-radius:8px;color:#3ddc84;padding:6px 12px;font-size:0.78rem;cursor:pointer">↻</button>
-          </div>
-        </div>
-        <div id="mlist"><div style="color:#445;font-size:0.82rem">Carregando...</div></div>
-      </div>
-    </div>
 
     <!-- TIMES -->
     <div id="tab-teams" style="display:none">
@@ -218,6 +178,50 @@
           </div>
           <div id="alist"></div>
         </div>
+
+        <!-- PERFORMANCE dentro do admin -->
+        <div style="margin-top:16px">
+          <div class="card-title" style="margin-top:8px">📈 Performance do modelo</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+            <div class="stat-card"><div class="stat-lbl">Jogos</div><div class="stat-val" id="st0" style="color:#fff">—</div></div>
+            <div class="stat-card"><div class="stat-lbl">Realizados</div><div class="stat-val" id="st1" style="color:#fff">—</div></div>
+            <div class="stat-card" style="background:#0d1a14;border-color:#1a3024"><div class="stat-lbl" style="color:#3ddc84">% Resultado</div><div class="stat-val" id="st2" style="color:#3ddc84">—</div></div>
+            <div class="stat-card" style="background:#0d1420;border-color:#1a2040"><div class="stat-lbl" style="color:#4A90D9">% Placar exato</div><div class="stat-val" id="st3" style="color:#4A90D9">—</div></div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px">
+            <div class="card-title">➕ Cadastrar jogo</div>
+            <div class="g3">
+              <div class="fld"><label class="lbl">Competição</label><select id="mc" onchange="fillMSelects()"><option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option></select></div>
+              <div class="fld"><label class="lbl">Data</label><input id="mdt" placeholder="ex: 07/05" /></div>
+              <div class="fld"><label class="lbl">Horário</label><input id="mti" placeholder="ex: 21:30" /></div>
+            </div>
+            <div class="g2vs">
+              <div class="fld"><label class="lbl">🏠 Casa</label><select id="mh"><option value="">Selecione...</option></select></div>
+              <div class="vs-lbl">vs</div>
+              <div class="fld"><label class="lbl">✈️ Visitante</label><select id="ma"><option value="">Selecione...</option></select></div>
+            </div>
+            <div class="g3">
+              <div class="fld"><label class="lbl">Odd Casa</label><input id="moh" placeholder="2.10" /></div>
+              <div class="fld"><label class="lbl">Odd Empate</label><input id="mod" placeholder="3.20" /></div>
+              <div class="fld"><label class="lbl">Odd Fora</label><input id="moa" placeholder="3.80" /></div>
+            </div>
+            <button class="btn-green" onclick="createMatch()">📅 Cadastrar jogo</button>
+            <div id="mmsg" style="font-size:0.8rem;margin-top:8px;display:none"></div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+              <div class="card-title" style="margin-bottom:0">📋 Jogos acompanhados</div>
+              <div style="display:flex;gap:8px">
+                <select id="mf" onchange="loadMatches()" style="width:auto;font-size:0.8rem"><option value="">Todas</option><option>Libertadores</option><option>Sul-Americana</option><option>Série A</option><option>Série B</option></select>
+                <button onclick="loadMatches()" style="background:#0d1a14;border:1px solid #3ddc84;border-radius:8px;color:#3ddc84;padding:6px 12px;font-size:0.78rem;cursor:pointer">↻</button>
+              </div>
+            </div>
+            <div id="mlist"><div style="color:#445;font-size:0.82rem">Carregando...</div></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -382,7 +386,7 @@ function renderMatchList(){
 
 function unlockAdmin(){
   const pw=document.getElementById("apwd").value;
-  if(pw==="dcpredict-admin-2025"){adSec=pw;document.getElementById("alock").style.display="none";document.getElementById("apanel").style.display="block";renderAdminTeams();}
+  if(pw==="dcpredict-admin-2025"){adSec=pw;document.getElementById("alock").style.display="none";document.getElementById("apanel").style.display="block";renderAdminTeams();fillMSelects();loadMatches();loadStats();}
   else document.getElementById("aerr").style.display="block";
 }
 
@@ -412,9 +416,9 @@ function renderAdminTeams(){
 }
 
 function showTab(name,btn){
-  ["predict","results","performance","teams","admin"].forEach(t=>{const el=document.getElementById("tab-"+t);if(el)el.style.display=t===name?"block":"none";});
+  ["predict","results","teams","admin"].forEach(t=>{const el=document.getElementById("tab-"+t);if(el)el.style.display=t===name?"block":"none";});
   document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
-  if(name==="performance")loadMatches();
+
 }
 
 function showMsg(el,txt,ok){el.textContent=txt;el.style.color=ok?"#3ddc84":"#ff6b6b";el.style.display="block";setTimeout(()=>el.style.display="none",4000);}
