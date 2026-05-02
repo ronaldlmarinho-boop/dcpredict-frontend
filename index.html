@@ -85,6 +85,15 @@
     .ev-positive { color: #3ddc84; }
     .ev-neutral { color: #8a9bb0; }
     .ev-negative { color: #ff6b6b; }
+    .heatmap-wrap { overflow-x: auto; margin-top: 4px; }
+    .heatmap-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; font-family: monospace; }
+    .heatmap-table th { background: #111820; color: #556; padding: 5px 8px; text-align: center; font-weight: 600; border: 1px solid #1a1f28; }
+    .heatmap-table td { padding: 5px 8px; text-align: center; border: 1px solid #1a1f28; font-weight: 700; min-width: 44px; }
+    .heatmap-table .row-header { background: #111820; color: #556; font-weight: 600; }
+    .heatmap-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .heatmap-sum-card { border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .heatmap-sum-label { font-size: 0.65rem; color: #556; font-family: monospace; margin-bottom: 4px; }
+    .heatmap-sum-val { font-size: 1.1rem; font-weight: 800; }
 
     /* TEAMS TABLE */
     .teams-header { display: grid; grid-template-columns: 2fr 1.2fr 0.7fr 0.7fr; gap: 8px; padding: 5px 0; font-size: 0.62rem; color: #334; font-family: 'DM Mono', monospace; text-transform: uppercase; border-bottom: 1px solid #1a1f28; margin-bottom: 4px; }
@@ -384,6 +393,120 @@ async function calcPredict() {
   btn.disabled = false; btn.textContent = "⚡ Calcular previsão";
 }
 
+
+// ── Matriz de calor Dixon-Coles ────────────────────────────────────────
+function poissonPMF(lam, k) {
+  let logP = -lam;
+  for (let i = 1; i <= k; i++) logP += Math.log(lam) - Math.log(i);
+  return k === 0 ? Math.exp(-lam) : Math.exp(logP);
+}
+
+function tauDC(i, j, lh, la, rho) {
+  if (i===0&&j===0) return 1 - lh*la*rho;
+  if (i===0&&j===1) return 1 + lh*rho;
+  if (i===1&&j===0) return 1 + la*rho;
+  if (i===1&&j===1) return 1 - rho;
+  return 1;
+}
+
+function buildHeatmap(lh, la, homeTeam, awayTeam) {
+  const rho = -0.13;
+  const MAX = 7;
+  const mat = [];
+  let total = 0;
+  for (let i = 0; i <= MAX; i++) {
+    mat[i] = [];
+    for (let j = 0; j <= MAX; j++) {
+      const p = poissonPMF(lh, i) * poissonPMF(la, j) * tauDC(i, j, lh, la, rho);
+      mat[i][j] = Math.max(p, 0);
+      total += mat[i][j];
+    }
+  }
+  // Normalizar
+  for (let i = 0; i <= MAX; i++)
+    for (let j = 0; j <= MAX; j++)
+      mat[i][j] /= total;
+
+  // Filtrar >= 3%
+  let winA = 0, draw = 0, winB = 0;
+  const cells = [];
+  for (let i = 0; i <= MAX; i++) {
+    for (let j = 0; j <= MAX; j++) {
+      const pct = mat[i][j] * 100;
+      if (pct >= 3) {
+        cells.push({ i, j, pct });
+        if (i > j) winA += pct;
+        else if (i === j) draw += pct;
+        else winB += pct;
+      }
+    }
+  }
+
+  // Encontrar max para cor
+  const maxP = Math.max(...cells.map(c => c.pct));
+
+  // Cabeçalho colunas
+  const cols = [...new Set(cells.map(c => c.j))].sort((a,b)=>a-b);
+  const rows = [...new Set(cells.map(c => c.i))].sort((a,b)=>a-b);
+
+  // Cor por intensidade
+  function cellColor(pct) {
+    const t = pct / maxP;
+    if (t > 0.7) return { bg: '#0d3320', color: '#3ddc84' };
+    if (t > 0.4) return { bg: '#0d2218', color: '#2aaa66' };
+    return { bg: '#0d1a14', color: '#1a7a44' };
+  }
+
+  let tableHtml = `<table class="heatmap-table">
+    <thead><tr>
+      <th>A\B</th>
+      ${cols.map(j => `<th>B=${j}</th>`).join('')}
+    </tr></thead><tbody>`;
+
+  for (const i of rows) {
+    tableHtml += `<tr><td class="row-header">A=${i}</td>`;
+    for (const j of cols) {
+      const p = mat[i][j] * 100;
+      if (p >= 3) {
+        const { bg, color } = cellColor(p);
+        tableHtml += `<td style="background:${bg};color:${color}">${p.toFixed(1)}%</td>`;
+      } else {
+        tableHtml += `<td style="color:#223">—</td>`;
+      }
+    }
+    tableHtml += '</tr>';
+  }
+  tableHtml += '</tbody></table>';
+
+  const summaryHtml = `
+    <div class="heatmap-summary">
+      <div class="heatmap-sum-card" style="background:#0d1e30">
+        <div class="heatmap-sum-label">${homeTeam}</div>
+        <div class="heatmap-sum-val" style="color:#6aadff">${winA.toFixed(1)}%</div>
+      </div>
+      <div class="heatmap-sum-card" style="background:#1a1a0d">
+        <div class="heatmap-sum-label">Empate</div>
+        <div class="heatmap-sum-val" style="color:#c8b060">${draw.toFixed(1)}%</div>
+      </div>
+      <div class="heatmap-sum-card" style="background:#1e0d0d">
+        <div class="heatmap-sum-label">${awayTeam}</div>
+        <div class="heatmap-sum-val" style="color:#ff7070">${winB.toFixed(1)}%</div>
+      </div>
+    </div>
+    <div style="font-size:0.6rem;color:#334;font-family:monospace;margin-top:6px">
+      Apenas placares com P ≥ 3% · Total considerado: ${(winA+draw+winB).toFixed(1)}%
+    </div>`;
+
+  return `
+    <div style="margin-top:4px">
+      <div style="font-size:0.72rem;color:#3ddc84;font-weight:700;font-family:monospace;margin-bottom:8px">
+        MATRIZ DE PROBABILIDADES (Dixon-Coles · placares ≥ 3%)
+      </div>
+      <div class="heatmap-wrap">${tableHtml}</div>
+      ${summaryHtml}
+    </div>`;
+}
+
 function renderResults() {
   const list = document.getElementById("results-list");
   if (predictions.length === 0) {
@@ -436,6 +559,7 @@ function renderResults() {
         </div>
         <div class="prob-labels"><span>Casa</span><span>Empate</span><span>Fora</span></div>
         ${evHtml}
+        <div style="margin-top:4px">${buildHeatmap(p.lambda_home, p.lambda_away, p.home_team, p.away_team)}</div>
       </div>`;
   }).join("");
 }
